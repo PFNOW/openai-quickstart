@@ -4,9 +4,9 @@ url = "http://127.0.0.1:8000/translate_pdf/api"
 
 # 填写表单数据
 data = {
-    "openai_api_key": "sk-mNtv08y1KsyuWH6VBZjPl1gg0zgUwy6TMakoW99sJ3JbQzIv",
+    "openai_api_key": "",
     "model_name": "gpt-4o-mini",
-    "openai_api_url": "https://chatapi.littlewheat.com/v1",
+    "openai_api_url": "",
     "language": "Chinese",
     "file_format": "pdf",
     "pages": 2,
