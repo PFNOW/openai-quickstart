@@ -16,9 +16,13 @@ streamlit run characterglm_api_demo_streamlit.py
 # 通过.env文件设置环境变量
 # reference: https://github.com/theskumar/python-dotenv
 """
+import base64
 import os
 import itertools
+from io import BytesIO
 from typing import Iterator, Optional
+
+import requests
 import streamlit as st
 from dotenv import load_dotenv
 
@@ -206,6 +210,27 @@ with st.container():
     with button_key_to_col["start_AI_generate"]:
         start_AI_generate = st.button(button_labels["start_AI_generate"], key="start_AI_generate")
 
+    with button_key_to_col["save_history"]:
+        save_history = st.button(button_labels["save_history"], key="save_history")
+        if save_history:
+            with open("history.md", "w", encoding="utf-8") as f:
+                for msg in st.session_state["history"]:
+                    if msg["role"] == "user":
+                        f.write(f"**{st.session_state['meta']['user_name']}:** {msg['content']}\n\n")
+                    elif msg["role"] == "assistant":
+                        f.write(f"**{st.session_state['meta']['bot_name']}:** {msg['content']}\n\n")
+                    elif msg["role"] == "image":
+                        image_url = msg["image"]
+                        response = requests.get(image_url)
+                        if response.status_code == 200:
+                            # 将图片内容转换为BytesIO对象
+                            image_data = BytesIO(response.content)
+                            image_base64 = base64.b64encode(image_data.getvalue()).decode('utf-8')
+                            f.write(f"![{msg['caption']}](data:image/png;base64,{image_base64})\n\n")
+                        f.write(f"**Image提示词:** {msg['caption']}\n\n")
+                    elif msg["role"] == "system":
+                        f.write(f"**系统提示:** {msg['content']}\n\n")
+
     if debug:
         with button_key_to_col["show_api_key"]:
             show_api_key = st.button(button_labels["show_api_key"], key="show_api_key")
@@ -258,26 +283,30 @@ def start_ai_generate():
     st.session_state["history"].append(TextMsg({"role": "system", "content": st.session_state["meta"]["system_prompt_content"]}))
     start_messages = [
         TextMsg({"role": "system", "content": st.session_state["meta"]["system_prompt_content"]}),
-        TextMsg({"role": "user", "content": "请生成user_role的对话。"}),
+        TextMsg({"role": "user", "content": f"你是{st.session_state['meta']['user_name']}。{st.session_state['meta']['user_info']}。请生成符合角色的对话。"}),
     ]
-    query = get_characterglm_response(filter_text_msg(start_message), meta=st.session_state["meta"])
-    if not query:
-        raise Exception("生成出错")
+    query_stream = api.get_chatglm_response_via_sdk(filter_text_msg(start_messages))
+    query = output_stream_response(query_stream, input_placeholder)
+    st.session_state["history"].append(TextMsg({"role": "user", "content": query}))
     role_1_messages = [
-        TextMsg({"role": "system", "content": st.session_state["meta"]["system_prompt_content"]}),
+        TextMsg({"role": "system", "content": st.session_state["meta"]["system_prompt_content"]+ f"你的角色是{st.session_state['meta']['user_name']}。{st.session_state['meta']['user_info']}" }),
         TextMsg({"role": "user", "content": query}),
     ]
     role_2_messages = [
-        TextMsg({"role": "system", "content": st.session_state["meta"]["system_prompt_content"]}),
+        TextMsg({"role": "system", "content": st.session_state["meta"]["system_prompt_content"]+ f"你的角色是{st.session_state['meta']['bot_name']}。{st.session_state['meta']['bot_info']}" }),
     ]
-    for i in range(5):
-        response_stream = get_characterglm_response(filter_text_msg(st.session_state["history"]), meta=st.session_state["meta"])
+    for i in range(4):
+        response_stream = api.get_chatglm_response_via_sdk(filter_text_msg(st.session_state["history"]))
         bot_response = output_stream_response(response_stream, message_placeholder)
-        if not bot_response:
-            message_placeholder.markdown("生成出错")
-            st.session_state["history"].pop()
-        else:
-            st.session_state["history"].append(TextMsg({"role": "assistant", "content": bot_response}))
+        role_1_messages.append(TextMsg({"role": "assistant", "content": bot_response}))
+        role_2_messages.append(TextMsg({"role": "user", "content": bot_response}))
+        st.session_state["history"].append(TextMsg({"role": "assistant", "content": bot_response}))
+
+        response_stream = api.get_chatglm_response_via_sdk(filter_text_msg(role_2_messages))
+        bot_response = output_stream_response(response_stream, input_placeholder)
+        role_1_messages.append(TextMsg({"role": "user", "content": bot_response}))
+        role_2_messages.append(TextMsg({"role": "assistant", "content": bot_response}))
+        st.session_state["history"].append(TextMsg({"role": "user", "content": bot_response}))
 
 
 

@@ -2,7 +2,7 @@ import requests
 import time
 import os
 from typing import Generator
-
+from zhipuai import ZhipuAI
 import jwt
 
 from data_types import TextMsg, ImageMsg, TextMsgList, MsgList, CharacterMeta
@@ -94,11 +94,11 @@ def get_chatglm_response_via_sdk(messages: TextMsgList) -> Generator[str, None, 
     """ 通过sdk调用chatglm """
     # reference: https://open.bigmodel.cn/dev/api#glm-3-turbo  `GLM-3-Turbo`相关内容
     # 需要安装新版zhipuai
-    from zhipuai import ZhipuAI
+
     verify_api_key_not_empty()
     client = ZhipuAI(api_key=API_KEY) # 请填写您自己的APIKey
     response = client.chat.completions.create(
-        model="glm-3-turbo",  # 填写需要调用的模型名称
+        model="charglm-4",  # 填写需要调用的模型名称
         messages=messages,
         stream=True,
     )
