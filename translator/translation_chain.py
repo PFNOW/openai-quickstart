@@ -1,14 +1,13 @@
 import os
 
-from langchain_core.runnables import RunnablePassthrough
 from langchain_openai import ChatOpenAI
-from langchain.chains import LLMChain
+from langchain_ollama import ChatOllama
 
 from utils import LOG
 from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate, SystemMessagePromptTemplate
 
 class TranslationChain:
-    def __init__(self, model_name: str = "gpt-3.5-turbo", verbose: bool = True):
+    def __init__(self, model_type: str = "openai", model_name: str = "gpt-4o-mini", verbose: bool = True):
         
         # 翻译任务指令始终由 System 角色承担
         template = (
@@ -27,11 +26,17 @@ class TranslationChain:
             [system_message_prompt, human_message_prompt]
         )
         # 为了翻译结果的稳定性，将 temperature 设置为 0
-        api_key = os.getenv("OPENAI_API_KEY")
-        base_url = os.getenv("OPENAI_BASE_URL")
-        chat = ChatOpenAI(model_name=model_name, api_key=api_key, base_url=base_url, temperature=0, verbose=verbose)
+        if model_type == "openai":
+            api_key = os.getenv("OPENAI_API_KEY")
+            base_url = os.getenv("OPENAI_BASE_URL")
+            chat = ChatOpenAI(model_name=model_name, api_key=api_key, base_url=base_url, temperature=0, verbose=verbose)
+            self.chain = chat_prompt_template | chat
+        elif model_type == "ollama":
+            chat = ChatOllama(model=model_name, temperature=0, verbose=verbose)
+            self.chain = chat_prompt_template | chat
+        else:
+            raise ValueError(f"Unsupported model type: {model_type}")
 
-        self.chain =  chat_prompt_template| chat
 
     def run(self, text, source_language: str, target_language: str, style: str) -> (str, bool):
         result = ""

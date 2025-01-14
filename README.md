@@ -29,7 +29,7 @@ The OpenAI Translator is still in its early stages of development, and I'm activ
 ## Features
 
 - [X] Translation of English PDF books to Chinese using LLMs.
-- [X] Support for both [ChatGLM](https://github.com/THUDM/ChatGLM-6B) and [OpenAI](https://platform.openai.com/docs/models) models.
+- [X] Support for both [ChatGLM](https://github.com/THUDM/ChatGLM-6B) by using ollama and [OpenAI](https://platform.openai.com/docs/models) models.
 - [X] Flexible configuration through a YAML file or command-line arguments.
 - [X] Timeouts and error handling for robust translation operations.
 - [X] Modular and object-oriented design for easy customization and extension.
@@ -51,6 +51,15 @@ The OpenAI Translator is still in its early stages of development, and I'm activ
 2.The `OpenAI-Translator` requires Python 3.10 or later. Install the dependencies with `pip install -r requirements.txt`.
 
 3.Set up your OpenAI API key(`$OPENAI_API_KEY`). You can either add it to your environment variables or specify it in the config.yaml file.
+
+4.Download ollama in https://ollama.com/
+
+5.Use bash to pull the ChatGLM3-6B model from https://ollama.com/EntropyYue/chatglm3 or the chatGLM4-9b model from https://ollama.com/library/glm4
+```bash
+# use bash to pull the ChatGLM3-6B or chatGLM4-9b
+ollama pull EntropyYue/chatglm3
+ollama pull glm4
+```
 
 ### Usage
 
@@ -84,17 +93,18 @@ You can also specify the settings directly on the command line. Here's an exampl
 ```bash
 # Set your api_key as an env variable
 export OPENAI_API_KEY="sk-xxx"
-python ai_translator/main.py --model_name "gpt-3.5-turbo" --input_file "your_input.pdf" --output_file_format "markdown" --source_language "English" --target_language "Chinese" --style "Official document style"
+python ai_translator/main.py --model_type "openai" --model_name "gpt-3.5-turbo" --input_file "your_input.pdf" --output_file_format "markdown" --source_language "English" --target_language "Chinese" --style "Official document style"
 ```
 
 
 #### use Gradio UI
-You can use the Gradio UI to interact with the OpenAI Translator.
+You can use the Gradio UI to interact with the OpenAI Translator or choose the model.
 ```bash
 python ai_translator/gradio_server.py
 ```
 
 ![UI](images/UI.jpeg)
+![UI2](images/UI2.jpeg)
 
 ## License
 

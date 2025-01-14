@@ -28,7 +28,7 @@ OpenAI 翻译器目前还处于早期开发阶段，我正在积极地添加更�
 ## 特性
 
 - [X] 使用大型语言模型 (LLMs) 将英文 PDF 书籍翻译成中文。
-- [X] 支持 ChatGLM 和 OpenAI 模型。
+- [X] 支持通过 ollama 调用 ChatGLM, 支持 OpenAI 模型。
 - [X] 通过 YAML 文件或命令行参数灵活配置。
 - [X] 对健壮的翻译操作进行超时和错误处理。
 - [X] 模块化和面向对象的设计，易于定制和扩展。
@@ -50,6 +50,16 @@ OpenAI 翻译器目前还处于早期开发阶段，我正在积极地添加更�
 2.OpenAI-翻译器 需要 Python 3.10 或更高版本。使用 `pip install -r requirements.txt` 安装依赖项。
 
 3.设置您的 OpenAI API 密钥(`$OPENAI_API_KEY`)。您可以将其添加到环境变量中，或者在 config.yaml 文件中指定。
+
+4.下载并安装 ollama https://ollama.com/
+
+5.在命令行中拉取 ChatGLM3-6B（ https://ollama.com/EntropyYue/chatglm3 ） 或者拉取 chatGLM4-9b （ https://ollama.com/library/glm4 ）
+```bash
+# 在命令行中运行以下命令拉取 ChatGLM3-6B 模型或 ChatGLM4-9b 模型
+ollama pull EntropyYue/chatglm3
+ollama pull glm4
+```
+
 
 ### 使用示例
 
@@ -83,16 +93,17 @@ python ai_translator/main.py
 ```bash
 # 将您的 api_key 设置为环境变量
 export OPENAI_API_KEY="sk-xxx"
-python ai_translator/main.py --model_name "gpt-3.5-turbo" --input_file "your_input.pdf" --output_file_format "markdown" --source_language "English" --target_language "Chinese" --style "Official document style"
+python ai_translator/main.py --model_type "openai" --model_name "gpt-3.5-turbo" --input_file "your_input.pdf" --output_file_format "markdown" --source_language "English" --target_language "Chinese" --style "Official document style"
 ```
 
 
 #### 使用Gradio界面
-您也可以运行gradio_server.py 来使用 Gradio 界面。
+您也可以运行gradio_server.py 来使用 Gradio 界面并选择模型。
 ```bash
 python ai_translator/gradio_server.py
 ```
 ![UI](images/UI.jpeg)
+![UI2](images/UI2.jpeg)
 
 ## 许可证
 
