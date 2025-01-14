@@ -8,13 +8,24 @@ from utils import ArgumentParser, LOG
 from translator import PDFTranslator, TranslationConfig
 
 
-def translation(input_file, source_language, target_language):
-    LOG.debug(f"[翻译任务]\n源文件: {input_file.name}\n源语言: {source_language}\n目标语言: {target_language}")
+def translation(input_file, output_file_format, pages, source_language, target_language, style):
+    LOG.debug(f"[翻译任务]\n源文件: {input_file}\n源语言: {source_language}\n目标语言: {target_language}\n输出文件格式: {output_file_format}\n翻译页数: {pages}\n翻译风格: {style}")
+    if not os.path.exists(input_file):
+        return "文件不存在", None
+    if not pages or pages == 0:
+        # 实例化 PDFTranslator 类，并调用 translate_pdf() 方法
+        output_file_path = Translator.translate_pdf(
+            input_file, source_language=source_language, target_language=target_language,
+            output_file_format=output_file_format, style=style)
 
-    output_file_path = Translator.translate_pdf(
-        input_file.name, source_language=source_language, target_language=target_language)
+    if pages and pages < 0:
+        return "翻译页数必须大于等于1", None
+    # 实例化 PDFTranslator 类，并调用 translate_pdf() 方法
+    else :
+        output_file_path = Translator.translate_pdf(
+        input_file, source_language=source_language, target_language=target_language,output_file_format=output_file_format, pages=pages, style=style)
 
-    return output_file_path
+    return "翻译成功", output_file_path
 
 def launch_gradio():
 
@@ -23,16 +34,20 @@ def launch_gradio():
         title="OpenAI-Translator v2.0(PDF 电子书翻译工具)",
         inputs=[
             gr.File(label="上传PDF文件"),
+            gr.Radio(label="输出文件格式", choices=["markdown", "pdf"], type="value", value="markdown"),
+            gr.Number(label="翻译页数", step=1, minimum=0),
             gr.Textbox(label="源语言（默认：英文）", placeholder="English", value="English"),
-            gr.Textbox(label="目标语言（默认：中文）", placeholder="Chinese", value="Chinese")
+            gr.Textbox(label="目标语言（默认：中文）", placeholder="Chinese", value="Chinese"),
+            gr.Textbox(label="翻译风格", placeholder="Official", value="Official")
         ],
         outputs=[
+            gr.Textbox(label="翻译结果"),
             gr.File(label="下载翻译文件")
         ],
         allow_flagging="never"
     )
 
-    iface.launch(share=True, server_name="0.0.0.0")
+    iface.launch()
 
 def initialize_translator():
     # 解析命令行

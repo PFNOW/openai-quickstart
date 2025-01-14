@@ -1,10 +1,11 @@
+import base64
 import os
 from reportlab.lib import colors, pagesizes, units
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Image
 )
 
 from book import Book, ContentType
@@ -72,9 +73,23 @@ class Writer:
                             ('FONTNAME', (0, 1), (-1, -1), 'SimSun'),  # 更改表格中的字体为 "SimSun"
                             ('GRID', (0, 0), (-1, -1), 1, colors.black)
                         ])
-                        pdf_table = Table(table.values.tolist())
+                        header = table.columns.tolist()
+                        rows = table.values.tolist()
+                        result = [header] + rows
+                        pdf_table = Table(result)
                         pdf_table.setStyle(table_style)
                         story.append(pdf_table)
+                    elif content.content_type == ContentType.IMAGE:
+                        # Add image to the PDF
+                        try:
+                            for i, image in enumerate(content.translation):
+                                width = float(content.original[0]['width'])
+                                height = float(content.original[0]['height'])
+                                img = Image(image, width, height)
+                                story.append(img)
+                        except Exception as e:
+                            LOG.error(f"Error while adding image to PDF: {e}")
+
             # Add a page break after each page except the last one
             if page != book.pages[-1]:
                 story.append(PageBreak())
@@ -106,6 +121,17 @@ class Writer:
                             # body = '\n'.join(['| ' + ' | '.join(row) + ' |' for row in table.values.tolist()]) + '\n\n'
                             body = '\n'.join(['| ' + ' | '.join(str(cell) for cell in row) + ' |' for row in table.values.tolist()]) + '\n\n'
                             output_file.write(header + separator + body)
+
+                        elif content.content_type == ContentType.IMAGE:
+                            # Add image to the Markdown file
+                            try:
+                                for i, image in enumerate(content.translation):
+                                    # Add image in the form of Base64 string to the Markdown file
+                                    with open(image, 'rb') as f:
+                                        encoded_string = base64.b64encode(f.read()).decode('utf-8')
+                                        output_file.write(f"![image{i}](data:image/png;base64,{encoded_string})\n\n")
+                            except Exception as e:
+                                LOG.error(f"Error while adding image to Markdown: {e}")
 
                 # Add a page break (horizontal rule) after each page except the last one
                 if page != book.pages[-1]:

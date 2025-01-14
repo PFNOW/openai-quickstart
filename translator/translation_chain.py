@@ -1,3 +1,6 @@
+import os
+
+from langchain_core.runnables import RunnablePassthrough
 from langchain_openai import ChatOpenAI
 from langchain.chains import LLMChain
 
@@ -9,8 +12,9 @@ class TranslationChain:
         
         # 翻译任务指令始终由 System 角色承担
         template = (
-            """You are a translation expert, proficient in various languages. \n
-            Translates {source_language} to {target_language}."""
+            """You are a translation expert, proficient in various languages. You only need to provide the translation.\n
+            Translates {source_language} to {target_language}.\n
+            The style of translation is {style}.\n"""
         )
         system_message_prompt = SystemMessagePromptTemplate.from_template(template)
 
@@ -22,22 +26,27 @@ class TranslationChain:
         chat_prompt_template = ChatPromptTemplate.from_messages(
             [system_message_prompt, human_message_prompt]
         )
-
         # 为了翻译结果的稳定性，将 temperature 设置为 0
-        chat = ChatOpenAI(model_name=model_name, temperature=0, verbose=verbose)
+        api_key = os.getenv("OPENAI_API_KEY")
+        base_url = os.getenv("OPENAI_BASE_URL")
+        chat = ChatOpenAI(model_name=model_name, api_key=api_key, base_url=base_url, temperature=0, verbose=verbose)
 
-        self.chain = LLMChain(llm=chat, prompt=chat_prompt_template, verbose=verbose)
+        self.chain =  chat_prompt_template| chat
 
-    def run(self, text: str, source_language: str, target_language: str) -> (str, bool):
+    def run(self, text, source_language: str, target_language: str, style: str) -> (str, bool):
         result = ""
+        print(f"original text: {text}")
         try:
-            result = self.chain.run({
+            result = self.chain.invoke(input={
                 "text": text,
                 "source_language": source_language,
                 "target_language": target_language,
+                "style": style
             })
+            translation = result.content
+            print(f"Translation result: {translation}")
         except Exception as e:
             LOG.error(f"An error occurred during translation: {e}")
-            return result, False
+            return translation, False
 
-        return result, True
+        return translation, True

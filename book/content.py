@@ -1,3 +1,6 @@
+import json
+import os
+
 import pandas as pd
 
 from enum import Enum, auto
@@ -35,11 +38,34 @@ class Content:
     def __str__(self):
         return self.original
 
+class ImageContent(Content):
+    def __init__(self, images):
+        image_info = images
+        super().__init__(ContentType.IMAGE, images)
+
+    def save_image(self, pdf_page):
+        # 将解析出来图片数据作为original，将保存在本地的图片绝对路径作为translation
+        image_dirs = []
+        for image in self.original:
+            print(f"Image found: {image}")
+            # 提取图片的边界框和原始数据
+            bbox = (image['x0'], image['top'], image['x1'], image['bottom'])
+            image_data = pdf_page.crop(bbox)
+            im = image_data.to_image(antialias=True)
+            image_dir = os.getcwd() + f"\\page_{pdf_page.page_number + 1}_image_{self.original.index(image)}.png"
+            im.save(image_dir) # 保存图片
+            image_dirs.append(image_dir)
+        self.translation = image_dirs
+        self.status = True
+
+    def set_translation(self, translation, status):
+        pass
+    def __str__(self):
+        return str(self.translation)
 
 class TableContent(Content):
     def __init__(self, data, translation=None):
         df = pd.DataFrame(data)
-
         # Verify if the number of rows and columns in the data and DataFrame object match
         if len(data) != len(df) or len(data[0]) != len(df.columns):
             raise ValueError("The number of rows and columns in the extracted table data and DataFrame object do not match.")
@@ -57,7 +83,7 @@ class TableContent(Content):
             # Extract data rows from the remaining brackets
             data_rows = translation.split('] ')[1:]
             # Replace Chinese punctuation and split each row into a list of values
-            data_rows = [row[1:-1].split(', ') for row in data_rows]
+            data_rows = [row[3:-1].split(', ') for row in data_rows]
             # Create a DataFrame using the extracted header and data
             translated_df = pd.DataFrame(data_rows, columns=header)
             LOG.debug(f"[translated_df]\n{translated_df}")
@@ -75,7 +101,7 @@ class TableContent(Content):
         target_df = self.translation if translated else self.original
         for row_idx, row in target_df.iterrows():
             for col_idx, item in enumerate(row):
-                yield (row_idx, col_idx, item)
+                yield row_idx, col_idx, item
 
     def update_item(self, row_idx, col_idx, new_value, translated=False):
         target_df = self.translation if translated else self.original

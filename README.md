@@ -34,8 +34,9 @@ The OpenAI Translator is still in its early stages of development, and I'm activ
 - [X] Timeouts and error handling for robust translation operations.
 - [X] Modular and object-oriented design for easy customization and extension.
 - [x] Add support for other languages and translation directions.
-- [ ] Implement a graphical user interface (GUI) for easier use.
-- [ ] Create a web service or API to enable usage in web applications.
+- [x] Output the Images.
+- [x] Implement a graphical user interface (GUI) for easier use.
+- [x] Create a web service or API to enable usage in web applications.
 - [ ] Add support for batch processing of multiple PDF files.
 - [ ] Add support for preserving the original layout and formatting of the source PDF.
 - [ ] Improve translation quality by using custom-trained translation models.
@@ -65,6 +66,7 @@ input_file: "tests/test.pdf"
 output_file_format: "markdown"
 source_language: "English"
 target_language: "Chinese"
+sytle: "Official document style"
 ```
 
 Then run the tool:
@@ -82,8 +84,17 @@ You can also specify the settings directly on the command line. Here's an exampl
 ```bash
 # Set your api_key as an env variable
 export OPENAI_API_KEY="sk-xxx"
-python ai_translator/main.py --model_name "gpt-3.5-turbo" --input_file "your_input.pdf" --output_file_format "markdown" --source_language "English" --target_language "Chinese"
+python ai_translator/main.py --model_name "gpt-3.5-turbo" --input_file "your_input.pdf" --output_file_format "markdown" --source_language "English" --target_language "Chinese" --style "Official document style"
 ```
+
+
+#### use Gradio UI
+You can use the Gradio UI to interact with the OpenAI Translator.
+```bash
+python ai_translator/gradio_server.py
+```
+
+![UI](images/UI.jepg)
 
 ## License
 
