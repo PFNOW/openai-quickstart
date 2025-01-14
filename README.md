@@ -94,7 +94,7 @@ You can use the Gradio UI to interact with the OpenAI Translator.
 python ai_translator/gradio_server.py
 ```
 
-![UI](images/UI.jepg)
+![UI](images/UI.jpeg)
 
 ## License
 

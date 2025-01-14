@@ -92,7 +92,7 @@ python ai_translator/main.py --model_name "gpt-3.5-turbo" --input_file "your_inp
 ```bash
 python ai_translator/gradio_server.py
 ```
-![UI](images/UI.jepg)
+![UI](images/UI.jpeg)
 
 ## 许可证
 
